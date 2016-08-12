@@ -1,0 +1,14 @@
+*.[oa]
+*~
+*.so
+*.bak
+*.pyc
+*-orig
+*-sav
+foo*
+goo*
+TODO
+BUGS
+tmp/
+test/
+notes/

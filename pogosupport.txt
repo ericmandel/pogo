@@ -1,0 +1,4 @@
+css files in pogosupport.css: 
+../js9/css/tabcontent.css
+js files in pogosupport.js: 
+../js9/js/jquery.min.js ../js9/js/jquery-ui.min.js ../js9/js/jquery.flot.min.js ../js9/js/jquery.flot.errorbars.min.js ../js9/js/jquery.flot.navigate.min.js ../js9/js/jquery.flot.selection.min.js ../js9/js/flot-zoom.min.js ../js9/js/sprintf.min.js ../js9/js/tabcontent.js ../js9/js/jquery.flot.axislabels.js

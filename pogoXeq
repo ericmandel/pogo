@@ -1,0 +1,47 @@
+#!/bin/bash
+# set -x
+
+# make sure we have minimum arg count
+if [ $# -lt 1 ]; then
+    echo "$0 [cmd] [args ...]"
+    exit 1
+fi
+
+# on entry, the following JS9 environment variables will be available:
+# JS9_DIR		top level directory of js9 helper
+# JS9_WORKDIR		working directory, if configured
+# JS9_WORKDIR_QUOTA	quota for working directory, if configured
+# JS9_HOST		host ip of client
+# JS9_ID		id (from js9 div) of client
+
+# if we are being called via CGI, send stderr to stdout
+if [ x"$QUERY_STRING" != x ]; then
+  exec 2>&1
+fi
+
+# error handler: send to stderr (which will go to stdout for CGI)
+error() {
+  echo "ERROR: $*" >&2
+  exit 1
+}
+
+xsed() {
+  sed 's#'${JS9_DIR}'#${JS9_DIR}#g;'
+}
+
+# process known commands
+CMD="$1";     shift;
+case $CMD in
+flux)
+    if [ $# -eq 1 ]; then
+      pogoFlux ${CNTS} "$1" "$2" | xsed
+    else
+      pogoFlux ${CNTS} "$1" "$2" "$3" | xsed
+    fi
+    exit 0
+    ;;
+
+*)
+    error "unknown function: $CMD"
+    ;;
+esac

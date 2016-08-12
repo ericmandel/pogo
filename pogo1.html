@@ -1,0 +1,249 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head> 
+  <meta name="publisher" content="Center for Astrophysics">
+  <meta name="language" content="en">
+  <meta name="date" content="2016-08-11">
+  <meta name="author" content="Eric Mandel, CfA">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" > 
+  <link type="text/css" rel="stylesheet" href="pogosupport.css">
+  <script type="text/javascript" src="pogosupport.js"></script>
+  <script type="text/javascript" src="pogo.js"></script>
+  <style type="text/css">
+      #myTabsContainer {
+        padding-top: 0px;
+        padding-left: 5px;
+        padding-right: 5px;
+      }
+      #myBtnsContainer {
+        padding-top: 0px;
+        padding-left: 5px;
+        padding-right: 5px;
+      }
+      #myTabsDiv {
+        border-width: 0px;
+      }
+      .mytabcontent{
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 512px;
+        height: 512px;
+        min-width: 512px;
+        min-height: 512px;
+      }
+      .divtabs{
+        position: relative;
+        left: -65px;
+      }
+      .js9iframe{
+        position: relative;
+        left: -65px;
+        border: 0px solid black;
+        width: 650px;
+        min-width: 100%;
+        height: 850px;
+        min-height: 100%;
+      }
+      .dociframe{
+        border: 2px solid black;
+        width: 508px;
+        height: 508px;
+     }
+      .results{
+        border: 2px solid black;
+        background: #E9E9E9;
+        width: 490px;
+        height: 300px;
+        padding: 10px;
+        min-width: 490px;
+        min-height: 300px;
+        overflow: auto;
+        text-align: left;
+      }
+      .indentmenu{
+        font: normal 12px Arial;
+      }
+      .indentmenu ul{
+        border-top: 0px;
+        background: black url(indentbg_grey.png) center center repeat-x;
+      }
+      .indentmenu ul li a{
+        border-right: 4px solid white;
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+      .indentmenu ul li a.selected{
+        background: black url(indentbg2_grey.png) center center repeat-x;
+      }
+  </style>
+<title>Public Outreach for the Great Observatories</title>
+</head>
+<body>
+<script type="text/javascript">
+      // id of iframe containing js9 site
+      var pmEl = "js9iframe";
+      // js9 site
+      var pmTarget = "http://js9.si.edu";
+      // convenience for locating remote png files on js9 web site
+      var impath = "../js9/png/";
+      // page initialization
+      function initPage(){
+          // init the tabs
+          var epotabs;
+          epotabs = new ddtabcontent("epotabs"); //enter ID of Tab Container
+          epotabs.setpersist(false); //toogle persistence of the tabs' state
+          epotabs.setselectedClassTarget("link"); //"link" or "linkparent"
+          epotabs.init();
+      }
+      // when iframe is fully loaded, initialize postMessage communication
+      function initIframe(){
+          // init communication with the js9 site
+          POGO.init(pmEl, pmTarget);
+          // now the menus can be used
+          $(".pogomenu").prop("disabled", false);
+          // pre-load an image by sending the Load command
+          POGO.send("Preload", [impath+"casa.png"]);
+      }
+      // send a message to call a JS9 public API routine
+      // NB: the JS9 public API calls are documented here:
+      // http://js9.si.edu/js9/help/publicapi.html
+      // (this is just POGO.send + clear selectedIndex)
+      function pmsend(el, cmd, args, cb){
+          if( el && el.selectedIndex ){
+              el.selectedIndex = 0;
+          }
+          POGO.send(cmd, args, cb);
+      }
+      // webpage-specific callback function for displaying analysis results
+      function pmcb(obj){
+          var el = document.getElementById("results")
+          switch(obj.rtype){
+          case "text":
+              // simplest possible display of text
+              el.innerHTML = 
+                  "<pre>" + obj.rdata + "<\/pre>";
+              break;
+          case "plot":
+              // this will plot results in a div
+              try{ POGO.plot(el, obj); }
+    	      catch(e){ alert("can't plot data: " + e.message)};
+              break;
+          }
+      }
+      $(document).ready(function(){
+          $(".pogomenu").prop("disabled", true);
+          initPage();
+      });
+</script>
+
+<table cellspacing="5">
+    <tr valign="top">
+    <td style="text-align:center" colspan="2">
+    <b><font size="+2">
+    NASA's Great Observatories: Hubble, Chandra, Spitzer
+    </font></b>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td style="text-align:center">
+    <div id="myTabsContainer">
+    <div id="epotabs" class="indentmenu">
+    <ul>
+      <li><a href="#" rel="casa">Cas A</a></li>
+      <li><a href="#" rel="cenx3">Cen X-3</a></li>
+      <li><a href="#" rel="x3c273">3C 273</a></li>
+      <li><a href="#" rel="galaxies">M31 and Coma</a></li>
+    </ul>
+    <br style="clear: left">
+    </div>
+    </div>
+    </td>
+
+    <td style="text-align:center">
+    <div id="myBtnsContainer" class="divtabs">
+    <form action="">
+    <select class="pogomenu" id="xload" onchange="pmsend(this, 'Load', [impath+this.value]);">
+        <option selected disabled>Images</option>
+        <option value="casa.png">Cas A</option>
+        <option value="3c273.png">3C273</option>
+        <option value="ngkper.png">GK-Per</option>
+    </select>
+    <select class="pogomenu" id="xview" onchange="pmsend(this, 'DisplayPlugin', [this.value]);">
+        <option selected disabled>View</option>
+        <option value="blend">Blending</option>
+        <option value="blink">Blinking</option>
+        <option value="magnifier">Magnifier</option>
+        <option value="panner">Panner</option>
+        <option value="pxtabl">Pixel Table</option>
+    </select>
+    <select class="pogomenu" id="xcmap" onchange="pmsend(this, 'SetColormap', [this.value]);">
+        <option selected disabled>Colors</option>
+        <option value="grey">Grey</option>
+        <option value="heat">Heat</option>
+        <option value="cool">Cool</option>
+        <option value="red">Red</option>
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+    </select>
+    <select class="pogomenu" id="xscale" onchange="pmsend(this, 'SetScale', [this.value]);">
+        <option selected disabled>Scales</option>
+        <option value="linear">Linear</option>
+        <option value="log">Log</option>
+        <option value="histeq">Histeq</option>
+    </select>
+    <select class="pogomenu" id="xregions" onchange="pmsend(this, 'AddRegions', [this.value]);">
+        <option selected disabled>Regions</option>
+        <option value="box">Box</option>
+        <option value="circle">Circle</option>
+        <option value="ellipse">Ellipse</option>
+    </select>
+    <select class="pogomenu" id="xanalysis" onchange="pmsend(this, 'RunAnalysis', [this.value], pmcb);">
+        <option selected disabled>Analysis</option>
+        <option value="counts">Counts</option>
+        <option value="energyplot">Spectrum</option>
+    </select>
+    </form>
+    </div>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td>
+    <div id="casa" class="tabcontent mytabcontent">
+    <iframe class="dociframe" id="casaiframe" src="http://chandra-ed.harvard.edu/casa/index.html"></iframe>
+    </div>
+
+    <div id="myTabsDiv">
+    <div id="cenx3" class="tabcontent mytabcontent">
+    <iframe class="dociframe" id="cenx3iframe" src="http://chandra-ed.harvard.edu/clocks/clocks_intro.html"></iframe>
+    </div>
+
+    <div id="x3c273" class="tabcontent mytabcontent">
+    <iframe class="dociframe" id="x3c273iframe" src="http://chandra-ed.harvard.edu/3c273/time_machine.html"></iframe>
+    </div>
+
+    <div id="galaxies" class="tabcontent mytabcontent">
+    <iframe class="dociframe" id="galaxiesiframe" src="http://chandra-ed.harvard.edu/galaxies/index.html"></iframe>
+    </div>
+    </div>
+    </td>
+
+    <td rowspan="2">
+    <iframe class="js9iframe" id="js9iframe" src="http://js9.si.edu/pogo/pogo_center_top.html" onload="initIframe();" scrolling="no"></iframe>
+    </td>
+    </tr>
+
+    <tr valign="top">
+    <td style="text-align:center" colspan="2">
+    <div class="results" id="results">
+    </div>
+    </td>
+    </tr>
+
+</table>
+
+</body>
+</html>
