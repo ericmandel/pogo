@@ -55,12 +55,10 @@ case $TELESCOP in
       RAWAREA=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $6}'`
       # raw units
       RAWUNITS="ergs/cm**2/sec"
-      # convert sci notation to notation that bc understands
-      XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
-      # convert to flux density (0 to 10kev)
-      FLUX=`echo "scale=$BCSCALE; ${XRAWCNTS} / 10^4" | bc | awk '{printf("%g", $1)}'`
+      # which is the same as flux
+      FLUX=$RAWCNTS
       # flux units
-      UNITS="ergs/cm**2/sec/ev"
+      UNITS="ergs/cm**2/sec"
     ;;
 
     HST)
