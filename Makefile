@@ -29,6 +29,7 @@ install: clean
 	    echo "installing $(IFILES) in: $$TOP/$(IDIR)"; \
 	    cp -p $(IFILES) $$TOP/$(IDIR)/.; \
 	    echo "installing $(WFILES) $(AFILES) in: $$JDIR"; \
+	    chmod +x $(WFILES); \
 	    cp -p $(WFILES) $$JDIR/analysis-wrappers/.; \
 	    cp -p $(AFILES) $$JDIR/analysis-plugins/.; \
 	    if [ -d "$(BASE)" ]; then \
