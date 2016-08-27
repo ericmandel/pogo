@@ -12,15 +12,6 @@ JSFILES =	$(JSDIR)/jquery.min.js $(JSDIR)/jquery-ui.min.js $(JSDIR)/jquery.flot.
 CSSDIR	= ../js9/css
 CSSFILES =	$(CSSDIR)/tabcontent.css
 
-pogosupport:	FORCE
-		@(echo "remaking pogosupport ..."; \
-		  echo "css files in pogosupport.css: " > pogosupport.txt; \
-		  echo $(CSSFILES) >>  pogosupport.txt; \
-		  cat $(CSSFILES)  >  pogosupport.css;  \
-		  echo "js files in pogosupport.js: " >> pogosupport.txt; \
-		  echo $(JSFILES)  >> pogosupport.txt; \
-		  cat $(JSFILES)   >  pogosupport.js;)
-
 all:	FORCE
 	@echo "nothing to do for all (did you mean: make install?)"
 
@@ -50,6 +41,15 @@ install: clean
 	  else \
 	    echo "ERROR: could not find directory: $$TOP"; \
 	  fi;)
+
+pogosupport:	FORCE
+		@(echo "remaking pogosupport ..."; \
+		  echo "css files in pogosupport.css: " > pogosupport.txt; \
+		  echo $(CSSFILES) >>  pogosupport.txt; \
+		  cat $(CSSFILES)  >  pogosupport.css;  \
+		  echo "js files in pogosupport.js: " >> pogosupport.txt; \
+		  echo $(JSFILES)  >> pogosupport.txt; \
+		  cat $(JSFILES)   >  pogosupport.js;)
 
 eslint:	FORCE
 	eslint pogo.js
