@@ -84,6 +84,14 @@ case $TELESCOP in
     ;;
 
     SPITZER)
+      CHNLNUM=`getpar CHNLNUM < $HDR`
+      case $CHNLNUM in
+        1) XCONV="6.368 * 10^-15" ;;
+	2) XCONV="5.472 * 10^-15" ;;
+	3) XCONV="4.653 * 10^-15" ;;
+	4) XCONV="5.047 * 10^-15" ;;
+        *) error "unknown Spitzer channel"
+      esac
       OPTS="-t EXPTIME $OPTS"
       # get counts in regions
       funcnts $OPTS "$1" "$2" "$3" > $FUNFILE
@@ -94,14 +102,10 @@ case $TELESCOP in
       RAWUNITS="Mj/sr"
       # convert sci notation to notation that bc understands
       XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
-      # convert sci notation to notation that bc understands
-      XRAWAREA=`echo ${RAWAREA} | sed -e 's/[eE]+*/\\*10\\^/'`
-      # convert flux to ergs/cm**2/sec/cm**2/Hz
-      # ie. from MJy to Jy to ergs/cm**2/sec/sr/Hz to ergs/cm**2/sec/Hz
-      FLUX=`echo "scale=$BCSCALE; $XRAWCNTS * 10^6 * 10^-23 * ($XRAWAREA / (4.25 * 10^10))" | bc | awk '{printf("%g", $1)}'`
-      UNITS="ergs/cm**2/sec/Hz"
+      # convert to flux (see: email from Terry M, 8/27/16)
+      FLUX=`echo "scale=$BCSCALE; $XRAWCNTS * $XCONV" | bc | awk '{printf("%g", $1)}'`
+      UNITS="ergs/cm**2/sec"
     ;;
-
     *)
       EXPTIME=`getpar EXPTIME < $HDR`
       EXPOSURE=`getpar EXPOSURE < $HDR`
@@ -131,5 +135,3 @@ echo "{\"telescope\": \"$TELESCOP\", \"instrument\": \"$INSTRUME\", \"file\": \"
 # all done!
 cleanup
 exit 0
-
-\"srcreg\": \"$2\", \"bkgreg\": \"$3\", 
