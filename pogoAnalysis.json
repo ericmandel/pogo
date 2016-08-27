@@ -3,5 +3,5 @@
    "title"  : "Flux in Regions", 
    "files"  : "fits",
    "action" : "pogoXeq flux $filename $sregions $bregions",
-   "rtype"  : "text"},
+   "rtype"  : "text"}
 ]
