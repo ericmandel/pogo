@@ -21,15 +21,16 @@ getpar () {
   egrep "$1 *=" | awk -F= '{print $2}' | awk -F/ '{print $1}' | sed "s/[' ]*\([^ ']*\)[ ']*/\1/" | tr [a-z] [A-Z] | head -1
 }
 
-# requires 1 arg (2 optional)
+# requires 1 arg (2 others are optional)
 if [ $# -lt 1 ]; then
-  error "requires filename [sregion] [bregion]"
+  error "$0 requires filename [sregion [bregion]]"
 fi
+FILENAME=`basename $1`
 
 # look for funtools
 hash funcnts 1>/dev/null 2>&1
 if [ $? != 0 ]; then
-  error "error requires funtools"
+  error "$0 requires funtools to be installed"
 fi
 
 # get header
@@ -45,28 +46,51 @@ INSTRUME=`getpar INSTRUME < $HDR`
 # get telescope-specific options
 case $TELESCOP in
     CHANDRA)
-      # assumes we have run ciao eff2evt to add FLUX column
-      # exposure is already taken into account in the FLUX determination
-      OPTS="-v FLUX $OPTS"
+      # do we have a flux column?
+      egrep "^TTYPE.*'FLUX *'" $HDR 2>&1 1>/dev/null
+      if [ $? = 0 ]; then
+        # yes
+        HAVEFLUX=1
+        # exposure is already taken into account in the FLUX determination
+        OPTS="-v FLUX $OPTS"
+        # raw units
+        RAWUNITS="ergs/cm**2/sec"
+      else
+	EXPOSURE=`getpar EXPOSURE < $HDR`
+        if [ x$EXPOSURE != x ]; then
+	  # normalize by exposure
+          OPTS="$OPTS -t EXPOSURE"
+          # log the exposure value
+          XTRA=", \"exposure\": $EXPOSURE"
+          PERSEC="/sec"
+        fi
+        # raw units
+        RAWUNITS="photons"
+      fi
       # get counts in regions
       funcnts $OPTS "$1" "$2" "$3" > $FUNFILE
       RAWCNTS=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $2}'`
       # raw area
       RAWAREA=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $6}'`
-      # raw units
-      RAWUNITS="ergs/cm**2/sec"
-      # which is the same as flux
-      FLUX=$RAWCNTS
-      # flux units
-      UNITS="ergs/cm**2/sec"
+      # normalized flux
+      if [ x"$HAVEFLUX" = x1 ]; then
+        # rawcnts and flux are the same
+        FLUX="$RAWCNTS"
+        UNITS="$RAWUNITS"
+      else
+        # flux is (exposure-normalized) surface brightness
+        FLUX=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $7}'`
+        UNITS="$RAWUNITS/arcsec**2$PERSEC"
+      fi
     ;;
 
     HST)
       # counts to flux conversion value
       PHOTFLAM=`getpar PHOTFLAM < $HDR`
-      # convert sci notation to notation that bc understands
-      XPHOTFLAM=`echo ${PHOTFLAM} | sed -e 's/[eE]+*/\\*10\\^/'`
+      # normalize by exposure time
       OPTS="-t EXPTIME $OPTS"
+      # log the conversion value
+      XTRA=", \"photflam\": $PHOTFLAM"
       # get counts in regions
       funcnts $OPTS "$1" "$2" "$3" > $FUNFILE
       RAWCNTS=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $2}'`
@@ -74,11 +98,19 @@ case $TELESCOP in
       RAWAREA=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $6}'`
       # raw units
       RAWUNITS="electrons"
-      # convert sci notation to notation that bc understands
-      XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
-      # get flux using arbitrary precision arithmetic, then back to g format
-      FLUX=`echo "scale=$BCSCALE;$XRAWCNTS * $XPHOTFLAM" | bc | awk '{printf("%g", $1)}'`
-      UNITS="ergs/cm**2/sec/Ang"
+      if [ x"$PHOTFLAM" != x ]; then
+        # convert sci notation to notation that bc understands
+        XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
+        # convert sci notation to notation that bc understands
+        XPHOTFLAM=`echo ${PHOTFLAM} | sed -e 's/[eE]+*/\\*10\\^/'`
+        # get flux using arbitrary precision arithmetic, then back to g format
+        FLUX=`echo "scale=$BCSCALE;$XRAWCNTS * $XPHOTFLAM" | bc | awk '{printf("%g", $1)}'`
+        UNITS="ergs/cm**2/sec/Ang"
+      else
+        # flux is (exposure-normalized) surface brightness
+        FLUX=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $7}'`
+        UNITS="$RAWUNITS/arcsec**2/sec"
+      fi
     ;;
 
     SPITZER)
@@ -88,7 +120,7 @@ case $TELESCOP in
 	2) XCONV="5.472 * 10^-15" ;;
 	3) XCONV="4.653 * 10^-15" ;;
 	4) XCONV="5.047 * 10^-15" ;;
-        *) error "unknown Spitzer channel"
+        *) XCONV="" ;;
       esac
       OPTS="-t EXPTIME $OPTS"
       # get counts in regions
@@ -98,12 +130,21 @@ case $TELESCOP in
       RAWAREA=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $6}'`
       # raw units
       RAWUNITS="Mj/sr"
-      # convert sci notation to notation that bc understands
-      XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
-      # convert to flux (see: email from Terry M, 8/27/16)
-      FLUX=`echo "scale=$BCSCALE; $XRAWCNTS * $XCONV" | bc | awk '{printf("%g", $1)}'`
-      UNITS="ergs/cm**2/sec"
+      if [ x"$XCONV" != x ]; then
+        # log the conversion value
+        XTRA=", \"fluxconv\": `echo "scale=$BCSCALE; $XCONV" | bc | awk '{printf("%g", $1)}'`, \"channel\": ${CHNLNUM:-\"\"}"
+        # convert sci notation to notation that bc understands
+        XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
+        # convert to flux (see: email from Terry M, 8/27/16)
+        FLUX=`echo "scale=$BCSCALE; $XRAWCNTS * $XCONV" | bc | awk '{printf("%g", $1)}'`
+        UNITS="ergs/cm**2/sec"
+      else
+        # rawcnts and flux are the same
+        FLUX="$RAWCNTS"
+        UNITS="$RAWUNITS"
+      fi
     ;;
+
     *)
       EXPTIME=`getpar EXPTIME < $HDR`
       EXPOSURE=`getpar EXPOSURE < $HDR`
@@ -120,15 +161,15 @@ case $TELESCOP in
       # raw area
       RAWAREA=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $6}'`
       # raw units
-      RAWUNITS="photons/arcsec**2$PERSEC"
-      # no flux
-      FLUX='"N/A"'
-      UNITS="N/A"
+      RAWUNITS="photons"
+      # rawcnts and flux are the same
+      FLUX=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $7}'`
+      UNITS="$RAWUNITS/arcsec**2$PERSEC"
     ;;
 esac
 
-# output flux and units
-echo "{\"telescope\": \"$TELESCOP\", \"instrument\": \"$INSTRUME\", \"file\": \"$1\", \"srcreg\": \"$2\", \"bkgreg\": \"$3\", \"flux\": $FLUX, \"units\": \"$UNITS\", \"rawcounts\": $RAWCNTS, \"rawunits\": \"$RAWUNITS\", \"rawarea\": $RAWAREA}"
+# output flux and units, among other things
+echo "{\"telescope\": \"${TELESCOP:-unknown}\", \"instrument\": \"${INSTRUME:-unknown}\", \"file\": \"$FILENAME\", \"flux\": $FLUX, \"units\": \"$UNITS\", \"rawcounts\": $RAWCNTS, \"rawunits\": \"$RAWUNITS\", \"rawarea\": $RAWAREA, \"srcreg\": \"$2\", \"bkgreg\": \"$3\"$XTRA}"
 
 # all done!
 cleanup
