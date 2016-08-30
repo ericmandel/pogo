@@ -61,7 +61,7 @@ case $TELESCOP in
 	  # normalize by exposure
           OPTS="$OPTS -t EXPOSURE"
           # log the exposure value
-          XTRA=", \"exposure\": $EXPOSURE"
+          XTRA="exposure:\t$EXPOSURE"
           PERSEC="/sec"
         fi
         # raw units
@@ -89,8 +89,6 @@ case $TELESCOP in
       PHOTFLAM=`getpar PHOTFLAM < $HDR`
       # normalize by exposure time
       OPTS="-t EXPTIME $OPTS"
-      # log the conversion value
-      XTRA=", \"photflam\": $PHOTFLAM"
       # get counts in regions
       funcnts $OPTS "$1" "$2" "$3" > $FUNFILE
       RAWCNTS=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $2}'`
@@ -132,7 +130,7 @@ case $TELESCOP in
       RAWUNITS="Mj/sr"
       if [ x"$XCONV" != x ]; then
         # log the conversion value
-        XTRA=", \"fluxconv\": `echo "scale=$BCSCALE; $XCONV" | bc | awk '{printf("%g", $1)}'`, \"channel\": ${CHNLNUM:-\"\"}"
+        XTRA="channel:\t${CHNLNUM:-NONE}"
         # convert sci notation to notation that bc understands
         XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
         # convert to flux (see: email from Terry M, 8/27/16)
@@ -168,8 +166,12 @@ case $TELESCOP in
     ;;
 esac
 
-# output flux and units, among other things
-echo "{\"telescope\": \"${TELESCOP:-unknown}\", \"instrument\": \"${INSTRUME:-unknown}\", \"file\": \"$FILENAME\", \"flux\": $FLUX, \"units\": \"$UNITS\", \"rawcounts\": $RAWCNTS, \"rawunits\": \"$RAWUNITS\", \"rawarea\": $RAWAREA, \"srcreg\": \"$2\", \"bkgreg\": \"$3\"$XTRA}"
+# text output: flux and units, among other things
+
+printf "  telescope:\t${TELESCOP:-unknown}\n  instrument:\t${INSTRUME:-unknown}\n  filename:\t$FILENAME\n  flux:      \t$FLUX $UNITS\n  raw counts:\t$RAWCNTS $RAWUNITS\n  raw area:\t$RAWAREA pixels\n  src region:\t${2:-NONE}\n  bkg region:\t${3:-NONE}\n"
+if [ x"$XTRA" != x ]; then
+  printf "  $XTRA\n"
+fi
 
 # all done!
 cleanup
