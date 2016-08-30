@@ -81,8 +81,9 @@
       // page initialization
       function initPage(){
           var epotabs;
-          // place all light windows in our own div
+          // setting this property will place analysis results in our div
           JS9.globalOpts.analysisDiv = "myAnalysisResults";
+          // load images when a new tab is clicked
           $(".imload").on("click", function(){
               var id = $(this).attr("rel");
               imageLoad(id);
