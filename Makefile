@@ -1,4 +1,4 @@
-IFILES	= pogo1.html pogo2.html pogo_center_top.html \
+IFILES	= pogo.html pogo1.html pogo2.html pogo_center_top.html \
 	  pogo.js pogosupport.js pogosupport.css \
 	  indentbg_grey.png indentbg2_grey.png
 WFILES	= pogoXeq
