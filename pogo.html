@@ -74,9 +74,14 @@
       // images associated with each page
       var plot;
       var images = {
-          casa: ["../js9/png/casa.png"],
-          x3c273: ["../js9/png/3c273.png"],
-          galaxies: ["../js9/png/m13.png", "../js9/png/ngc1316.png"]
+          casa: [{file: "../js9/png/casa.png"}],
+          x3c273: [{file: "../js9/png/3c273.png"}],
+          m82: [{file: "../data/m82/m82_chandra.fits.gz", parentFile: "../data/m82/acisf00361N003_flux2_evt2.fits.gz"},
+                {file: "../data/m82/m82_hubble.fits.gz", parentFile: "../data/m82/hlsp_m82_hst_acs-wfc_all_f555w_v1_drz_drz.fits"},
+                {file: "../data/m82/m82_spitzer_1.fits.gz", parentFile: "../data/m82/NGC3034_irac1.fits"},
+                {file: "../data/m82/m82_spitzer_2.fits.gz", parentFile: "../data/m82/NGC3034_irac2.fits"},
+                {file: "../data/m82/m82_spitzer_3.fits.gz", parentFile: "../data/m82/NGC3034_irac3.fits"},
+                {file: "../data/m82/m82_spitzer_4.fits.gz", parentFile: "../data/m82/NGC3034_irac4.fits"}]
       };
       // page initialization
       function initPage(){
@@ -99,11 +104,12 @@
           epotabs.init();
       }
       function imageLoad(id){
-        var i; 
+        var i, imobj;
         $("#myAnalysisResults").empty();
         if( images[id] && images[id].length ){
             for(i=0; i<images[id].length; i++){
-                JS9.Load(images[id][i]);
+                imobj = images[id][i];
+                JS9.Load(imobj.file, {parentFile: imobj.parentFile});
             }
         }
       }
@@ -126,7 +132,7 @@
     <ul>
       <li><a href="#" class="imload" rel="casa">Cas A</a></li>
       <li><a href="#" class="imload" rel="x3c273">3C 273</a></li>
-      <li><a href="#" class="imload" rel="galaxies">M31 and Coma</a></li>
+      <li><a href="#" class="imload" rel="m82">M82</a></li>
       <li><a href="#" class="imload" rel="cenx3">Cen X-3</a></li>
     </ul>
     <br style="clear: left">
@@ -141,14 +147,12 @@
     <iframe class="dociframe" id="x3c273iframe" src="http://chandra-ed.harvard.edu/3c273/time_machine.html"></iframe>
     </div>
 
-    <div id="myTabsDiv">
     <div id="cenx3" class="tabcontent mytabcontent">
     <iframe class="dociframe" id="cenx3iframe" src="http://chandra-ed.harvard.edu/clocks/clocks_intro.html"></iframe>
     </div>
 
-    <div id="galaxies" class="tabcontent mytabcontent">
-    <iframe class="dociframe" id="galaxiesiframe" src="http://chandra-ed.harvard.edu/galaxies/index.html"></iframe>
-    </div>
+    <div id="m82" class="tabcontent mytabcontent">
+    <iframe class="dociframe" id="m82iframe" src="http://chandra-ed.harvard.edu/galaxies/index.html"></iframe>
     </div>
     </td>
 
