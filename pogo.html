@@ -74,14 +74,14 @@
       // images associated with each page
       var plot;
       var images = {
-          casa: [{file: "../js9/png/casa.png"}],
-          x3c273: [{file: "../js9/png/3c273.png"}],
-          m82: [{file: "../data/m82/m82_chandra.fits.gz", parentFile: "../data/m82/acisf00361N003_flux2_evt2.fits.gz"},
-                {file: "../data/m82/m82_hubble.fits.gz", parentFile: "../data/m82/hlsp_m82_hst_acs-wfc_all_f555w_v1_drz_drz.fits"},
-                {file: "../data/m82/m82_spitzer_1.fits.gz", parentFile: "../data/m82/NGC3034_irac1.fits"},
-                {file: "../data/m82/m82_spitzer_2.fits.gz", parentFile: "../data/m82/NGC3034_irac2.fits"},
-                {file: "../data/m82/m82_spitzer_3.fits.gz", parentFile: "../data/m82/NGC3034_irac3.fits"},
-                {file: "../data/m82/m82_spitzer_4.fits.gz", parentFile: "../data/m82/NGC3034_irac4.fits"}]
+          casa: ["../js9/png/casa.png"],
+          x3c273: ["../js9/png/3c273.png"],
+          m82: ["../data/m82/m82_chandra.fits.gz", {parentFile: "../data/m82/acisf00361N003_flux2_evt2.fits.gz", colormap: "cool", scale: "log", contrast: 3.8, bias: 0.095},
+                "../data/m82/m82_hubble.fits.gz", {parentFile: "../data/m82/hlsp_m82_hst_acs-wfc_all_f555w_v1_drz_drz.fits", colormap: "heat", contrast: 6.25, bias: 0.065},
+                "../data/m82/m82_spitzer_1.fits.gz", {parentFile: "../data/m82/NGC3034_irac1.fits", colormap: "red"},
+                "../data/m82/m82_spitzer_2.fits.gz", {parentFile: "../data/m82/NGC3034_irac2.fits", colormap: "green"},
+                "../data/m82/m82_spitzer_3.fits.gz", {parentFile: "../data/m82/NGC3034_irac3.fits", colormap: "blue"},
+                "../data/m82/m82_spitzer_4.fits.gz", {parentFile: "../data/m82/NGC3034_irac4.fits", colormap: "i8"}]
       };
       // page initialization
       function initPage(){
@@ -108,8 +108,12 @@
         $("#myAnalysisResults").empty();
         if( images[id] && images[id].length ){
             for(i=0; i<images[id].length; i++){
-                imobj = images[id][i];
-                JS9.Load(imobj.file, {parentFile: imobj.parentFile});
+                if( typeof images[id][i+1] === "object" ){
+                    JS9.Load(images[id][i], images[id][i+1]);
+                    i++;
+                } else {
+                    JS9.Load(images[id][i]);
+                }
             }
         }
       }
