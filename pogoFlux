@@ -120,7 +120,7 @@ case $TELESCOP in
       else
         # flux is (exposure-normalized) surface brightness
         FLUX=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $7}'`
-        UNITS="$RAWUNITS/arcsec**2/sec"
+        UNITS="$RAWUNITS/arcsec**2"
       fi
     ;;
 
