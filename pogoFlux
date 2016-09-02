@@ -88,22 +88,35 @@ case $TELESCOP in
       # counts to flux conversion value
       PHOTFLAM=`getpar PHOTFLAM < $HDR`
       # normalize by exposure time
-      OPTS="-t EXPTIME $OPTS"
+      # already part of raw counts,  (see email from Terry M, 9/2/2016)
+      # OPTS="-t EXPTIME $OPTS"
       # get counts in regions
       funcnts $OPTS "$1" "$2" "$3" > $FUNFILE
       RAWCNTS=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $2}'`
       # raw area
       RAWAREA=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $6}'`
-      # raw units
-      RAWUNITS="electrons"
+      # raw units (see email from Terry M, 9/2/2016)
+      RAWUNITS="electrons/sec"
       if [ x"$PHOTFLAM" != x ]; then
         # convert sci notation to notation that bc understands
         XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
         # convert sci notation to notation that bc understands
         XPHOTFLAM=`echo ${PHOTFLAM} | sed -e 's/[eE]+*/\\*10\\^/'`
         # get flux using arbitrary precision arithmetic, then back to g format
-        FLUX=`echo "scale=$BCSCALE;$XRAWCNTS * $XPHOTFLAM" | bc | awk '{printf("%g", $1)}'`
+        FLUX=`echo "scale=$BCSCALE;$XRAWCNTS * $XPHOTFLAM" | bc | awk '{printf("%.12g", $1)}'`
         UNITS="ergs/cm**2/sec/Ang"
+        # instrument and filter
+        FILTER1=`getpar FILTER1 < $HDR`
+        # convert from monochromatic flux for this instrument, filter
+        if [ x"$INSTRUME $FILTER1" = x"ACS F555W" ]; then
+          # conversion factor (see email from Terry M, 9/2/2016)
+          XCONV="1572"
+          # convert sci notation to notation that bc understands
+          XFLUX=`echo ${FLUX} | sed -e 's/[eE]+*/\\*10\\^/'`
+          # convert monochromatic flux to flux
+          FLUX=`echo "scale=$BCSCALE;$XFLUX * $XCONV" | bc | awk '{printf("%.12g", $1)}'`
+          UNITS="ergs/cm**2/sec"
+        fi
       else
         # flux is (exposure-normalized) surface brightness
         FLUX=`cat $FUNFILE | sed '1,/---- .*/d;/^$/,$d' | awk '{print $7}'`
@@ -134,7 +147,7 @@ case $TELESCOP in
         # convert sci notation to notation that bc understands
         XRAWCNTS=`echo ${RAWCNTS} | sed -e 's/[eE]+*/\\*10\\^/'`
         # convert to flux (see: email from Terry M, 8/27/16)
-        FLUX=`echo "scale=$BCSCALE; $XRAWCNTS * $XCONV" | bc | awk '{printf("%g", $1)}'`
+        FLUX=`echo "scale=$BCSCALE; $XRAWCNTS * $XCONV" | bc | awk '{printf("%.12g", $1)}'`
         UNITS="ergs/cm**2/sec"
       else
         # rawcnts and flux are the same
