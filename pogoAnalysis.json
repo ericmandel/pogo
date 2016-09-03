@@ -1,7 +1,7 @@
 [
   {"name"   : "flux",
    "title"  : "Flux in Regions", 
-   "files"  : "fits",
+   "files"  : "js9Var(globalOpts.projectName,pogo)",
    "action" : "pogoXeq flux $filename $sregions $bregions",
    "rtype"  : "text"}
 ]
